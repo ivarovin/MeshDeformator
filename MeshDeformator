@@ -2,7 +2,6 @@ using System.Collections;
 using UnityEngine;
 
 public enum DeformationMode { None, Random, Wave, Hole }
-
 public class MeshDeformator : MonoBehaviour
 {
     public MeshGenerator meshGenerator;
@@ -13,7 +12,7 @@ public class MeshDeformator : MonoBehaviour
     private int xMeshSize { get => meshGenerator.xMeshSize; }
     private Vector3[] vertices { get => meshGenerator.vertices; }
 
-    private void Awake()
+    private void Start()
     {
         if (deformationMode != DeformationMode.None)
             StartCoroutine(DeformMesh());
@@ -29,12 +28,16 @@ public class MeshDeformator : MonoBehaviour
             {
                 case DeformationMode.Random:
 
-                    ModifyVerticesHeight(initialHeight - Random.Range(0f, 1f) * deformForce);
+                    for (int index = 0; index < vertices.Length; index++)
+                    {
+                        vertices[index].y = initialHeight - Random.Range(0f, 1f) * deformForce;
+                    }
                     yield return new WaitForSeconds(0.1f);
 
                     break;
 
                 case DeformationMode.Wave:
+
                     int border = xMeshSize;
                     for (int currWave = 0; currWave <= xMeshSize * 4; currWave += 8)
                     {
