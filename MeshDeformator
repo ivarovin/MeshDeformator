@@ -1,0 +1,102 @@
+using System.Collections;
+using UnityEngine;
+
+public enum DeformationMode { None, Random, Wave, Hole }
+
+public class MeshDeformator : MonoBehaviour
+{
+    public MeshGenerator meshGenerator;
+
+    public DeformationMode deformationMode;
+    public float deformForce;
+
+    private int xMeshSize { get => meshGenerator.xMeshSize; }
+    private Vector3[] vertices { get => meshGenerator.vertices; }
+
+    private void Awake()
+    {
+        if (deformationMode != DeformationMode.None)
+            StartCoroutine(DeformMesh());
+    }
+
+    IEnumerator DeformMesh()
+    {
+        float initialHeight = meshGenerator.vertices[0].y;
+
+        while (true)
+        {
+            switch (deformationMode)
+            {
+                case DeformationMode.Random:
+
+                    ModifyVerticesHeight(initialHeight - Random.Range(0f, 1f) * deformForce);
+                    yield return new WaitForSeconds(0.1f);
+
+                    break;
+
+                case DeformationMode.Wave:
+                    int border = xMeshSize;
+                    for (int currWave = 0; currWave <= xMeshSize * 4; currWave += 8)
+                    {
+                        for (int index = 0; index < vertices.Length; index++)
+                        {
+                            if (IsEqualOrSmallerThanBorder(vertices[index], border) &&
+                                IsEqualThanBorder(vertices[index], border))
+                            {
+                                vertices[index].y -= deformForce;
+                            }
+                        }
+
+                        yield return new WaitForSeconds(.1f);
+
+                        ModifyVerticesHeight(initialHeight);
+                        border--;
+                    }
+                    break;
+
+                case DeformationMode.Hole:
+
+                    int holeBorder = xMeshSize;
+                    for (int currWave = 0; currWave <= xMeshSize * 4; currWave += 8)
+                    {
+                        for (int index = 0; index < vertices.Length; index++)
+                        {
+                            if (IsEqualOrSmallerThanBorder(vertices[index], holeBorder))
+                            {
+                                vertices[index].y -= Random.Range(0f, 1f) * deformForce;
+                            }
+                        }
+
+                        yield return new WaitForSeconds(.1f);
+
+                        ModifyVerticesHeight(initialHeight);
+                        holeBorder--;
+                    }
+                    break;
+            }
+            yield return null;
+        }
+    }
+
+    private void ModifyVerticesHeight(float _height)
+    {
+        for (int index = 0; index < vertices.Length; index++)
+        {
+            vertices[index].y = _height;
+        }
+    }
+
+    private bool IsEqualOrSmallerThanBorder(Vector3 _vert, int _border)
+    {
+        return _vert.x >= xMeshSize - _border && _vert.z >= xMeshSize - _border &&
+        _vert.x <= _border && _vert.z <= _border;
+    }
+
+    private bool IsEqualThanBorder(Vector3 _vert, int _border)
+    {
+        float minBorder = xMeshSize - _border;
+
+        return _vert.x > _border - 1 || _vert.z > _border - 1 ||
+            _vert.x < minBorder + 1 || _vert.z < minBorder + 1;
+    }
+}
