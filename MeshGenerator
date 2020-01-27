@@ -1,0 +1,89 @@
+using UnityEngine;
+
+[RequireComponent(typeof(MeshFilter))]
+public class MeshGenerator : MonoBehaviour
+{    
+    public int xMeshSize, zMeshSize;
+
+    public Mesh mesh { get; set; }
+    public Vector3[] vertices { get; set; }
+    public int[] triangles { get; set; }
+
+    private void Awake()
+    {
+        mesh = new Mesh();
+        GenerateMesh();
+    }
+
+    public void GenerateMesh()
+    {
+        vertices = GenerateMeshVertices();
+        triangles = GenerateMeshTriangles();
+
+        SetMeshProperties();
+        UpdateMesh();
+    }
+
+    public Vector3[] GenerateMeshVertices()
+    {
+        Vector3[] generatedVertices = GetMeshVertices();
+
+        for (int index = 0, x = 0; x <= xMeshSize; x++)
+        {
+            for (int z = 0; z <= zMeshSize; z++)
+            {
+                generatedVertices[index] = new Vector3(x, 0, z);
+                index++;
+            }
+        }
+
+        return generatedVertices;
+    }
+
+    public Vector3[] GetMeshVertices() => new Vector3[(xMeshSize + 1) * (zMeshSize + 1)];
+
+    public int[] GenerateMeshTriangles()
+    {
+        int[] generatedTriangles = GetMeshTriangles();
+
+        int currVertice = 0;
+
+        for (int index = 0, x = 0; x < xMeshSize; x++)
+        {
+            for (int z = 0; z < zMeshSize; z++)
+            {
+                generatedTriangles[index] = currVertice;
+                generatedTriangles[index + 1] = currVertice + 1 + xMeshSize;
+                generatedTriangles[index + 2] = currVertice + 1;
+                generatedTriangles[index + 3] = currVertice + 1 + xMeshSize;
+                generatedTriangles[index + 4] = currVertice + 2 + xMeshSize;
+                generatedTriangles[index + 5] = currVertice + 1;
+
+                index += 6;
+                currVertice++;
+            }
+
+            currVertice++;
+        }
+
+        return generatedTriangles;
+    }
+
+    public int[] GetMeshTriangles() => new int[xMeshSize * zMeshSize * 6];
+
+    public void SetMeshProperties()
+    {
+        mesh.Clear();
+
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+    }
+
+    public void UpdateMesh() => GetComponent<MeshFilter>().mesh = mesh;
+
+    private void Update()
+    {
+        SetMeshProperties();
+        UpdateMesh();
+    }
+}
